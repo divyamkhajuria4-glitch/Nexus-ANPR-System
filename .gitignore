@@ -1,0 +1,26 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+logs/*.log*
+output/*
+!output/.gitkeep
+input/*
+!input/.gitkeep
+models/weights/*
+!models/weights/.gitkeep
+.DS_Store
+
+# GitHub upload exclusions
+*.zip
+*.pt
+*.pth
+*.onnx
+*.engine
+*.mp4
+*.avi
+*.mov
+*.mkv
+
+# macOS
+.DS_Store

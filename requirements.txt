@@ -1,0 +1,13 @@
+# NEXUS ANPR - core dependencies (Python 3.11 recommended).
+# Versions below are the combination I believe is mutually compatible; they were NOT
+# resolved or installed in the build sandbox (no network). If pip reports a conflict,
+# relax the failing pin and run `python main.py check`.
+numpy==1.26.4
+opencv-python==4.10.0.84
+torch==2.5.1
+torchvision==0.20.1
+ultralytics==8.3.40
+lapx>=0.5.9,<0.6        # ByteTrack's assignment solver; installed up-front so Ultralytics never pip-installs at run time
+easyocr==1.7.2
+streamlit==1.40.2       # optional dashboard (also provides pandas)
+pytest==8.3.4

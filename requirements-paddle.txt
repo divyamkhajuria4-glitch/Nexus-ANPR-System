@@ -1,0 +1,9 @@
+# OPTIONAL second OCR engine. PaddleOCR is the riskiest dependency on macOS (numpy/opencv pins
+# differ between its releases). Install ONLY after the core requirements work, e.g.:
+#     pip install paddlepaddle==2.6.2
+#     pip install paddleocr==2.7.3
+# If pip complains about opencv/numpy, try:  pip install paddleocr==2.7.3 --no-deps
+# and add its missing small dependencies one by one. None of this was verified in the build sandbox.
+# The project runs fine with EasyOCR alone (the default).
+paddlepaddle==2.6.2
+paddleocr==2.7.3
