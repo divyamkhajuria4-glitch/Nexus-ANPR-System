@@ -254,11 +254,16 @@ if result is not None and section in ("Overview", "Process video", "Plate result
 
     st.markdown('<div class="section"><h3>Final number plate readings</h3></div>', unsafe_allow_html=True)
     confirmed_texts = {r.final_text for r in result.records if r.status == PlateStatus.CONFIRMED.value and r.final_text}
+    seen_confirmed_texts = set()
     for record in result.records:
         if record.status == PlateStatus.NO_READING.value:
             continue
         if record.status != PlateStatus.CONFIRMED.value and record.best_guess_text in confirmed_texts:
             continue
+        if record.status == PlateStatus.CONFIRMED.value and record.final_text:
+            if record.final_text in seen_confirmed_texts:
+                continue
+            seen_confirmed_texts.add(record.final_text)
         crop_path = result.run_dir / record.crop_file if record.crop_file else None
         manual_review = manual_reviews.get(record.plate_instance_id)
         manually_uncertain = bool(manual_review and manual_review.get("manual_status") == "uncertain")

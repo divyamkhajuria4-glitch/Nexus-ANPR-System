@@ -17,24 +17,50 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 _FONT = cv2.FONT_HERSHEY_SIMPLEX
 
+# Normalized vehicle label mapping for clean on-screen display
+_VEHICLE_CLASS_MAP = {
+    "motorcycle": "bike",
+    "motorbike": "bike",
+    "bicycle": "cycle",
+    "car": "car",
+    "truck": "truck",
+    "bus": "bus",
+    "auto": "auto",
+    "rickshaw": "auto",
+    "autorickshaw": "auto",
+    "auto_rickshaw": "auto",
+    "auto-rickshaw": "auto",
+}
 
-def _scale(frame: np.ndarray) -> Tuple[float, int]:
+
+def _format_vehicle_label(class_name: Optional[str]) -> str:
+    if not class_name:
+        return "vehicle"
+    raw = str(class_name).strip().lower()
+    return _VEHICLE_CLASS_MAP.get(raw, raw)
+
+
+def _scale(frame: np.ndarray) -> Tuple[float, int, int]:
     h = frame.shape[0]
-    font = max(0.45, h / 1080 * 0.8)
-    return font, max(1, int(round(h / 540)))
+    font = max(0.45, h / 1080 * 0.75)
+    # Increased thickness for crisp, prominent bounding boxes on all resolutions
+    box_thick = max(2, int(round(h / 360)))
+    text_thick = max(1, int(round(box_thick * 0.5)))
+    return font, box_thick, text_thick
 
 
 def draw_label(frame: np.ndarray, text: str, x: int, y: int, color: Tuple[int, int, int],
                font_scale: float, thickness: int, above: bool = True) -> None:
     (tw, th), base = cv2.getTextSize(text, _FONT, font_scale, thickness)
     h, w = frame.shape[:2]
-    x = int(min(max(x, 0), max(w - tw - 4, 0)))
-    top = y - th - base - 4 if above else y + 2
+    pad = 4
+    x = int(min(max(x, 0), max(w - tw - pad * 2, 0)))
+    top = y - th - base - pad * 2 if above else y + 2
     if top < 0:
         top = y + 2
-    top = int(min(top, max(h - th - base - 4, 0)))
-    cv2.rectangle(frame, (x, top), (x + tw + 4, top + th + base + 4), color, -1)
-    cv2.putText(frame, text, (x + 2, top + th + 1), _FONT, font_scale, BLACK, thickness, cv2.LINE_AA)
+    top = int(min(top, max(h - th - base - pad * 2, 0)))
+    cv2.rectangle(frame, (x, top), (x + tw + pad * 2, top + th + base + pad * 2), color, -1)
+    cv2.putText(frame, text, (x + pad, top + th + pad), _FONT, font_scale, BLACK, thickness, cv2.LINE_AA)
 
 
 def draw_frame(frame: np.ndarray, vehicles: Sequence[VehicleDet],
@@ -42,17 +68,21 @@ def draw_frame(frame: np.ndarray, vehicles: Sequence[VehicleDet],
                hud_lines: Sequence[str]) -> np.ndarray:
     """Return an annotated copy with vehicle and plate boxes."""
     out = frame.copy()
-    font, thick = _scale(out)
+    font, box_thick, text_thick = _scale(out)
     for v in vehicles:
         x1, y1, x2, y2 = v.bbox.to_int()
-        cv2.rectangle(out, (x1, y1), (x2, y2), BLUE, thick)
+        # Single consistent blue color with increased thickness
+        cv2.rectangle(out, (x1, y1), (x2, y2), BLUE, box_thick)
+        label = _format_vehicle_label(v.class_name)
+        if label:
+            draw_label(out, label, x1, y1, BLUE, font, text_thick, above=True)
     for bbox, text in plates:
         if text:
             color = GREEN
         else:
             color = ORANGE
         x1, y1, x2, y2 = bbox.to_int()
-        cv2.rectangle(out, (x1, y1), (x2, y2), color, thick + 1)
+        cv2.rectangle(out, (x1, y1), (x2, y2), color, box_thick + 1)
         if text:
-            draw_label(out, text, x1, y2, color, font, thick, above=False)
+            draw_label(out, text, x1, y2, color, font, text_thick, above=False)
     return out
